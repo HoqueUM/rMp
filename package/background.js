@@ -1,97 +1,150 @@
-console.log('Content script running');
 
-const style = document.createElement('link');
-style.rel = 'stylesheet';
-style.type = 'text/css';
-style.href = chrome.runtime.getURL('style.css');
-document.head.appendChild(style);
+// umich: U2Nob29sLTEyNTg=
+// found at: inspect->network->graphql->payload
 
-function appendRMP() {
-    const professorLinks = document.querySelectorAll('.col-sm-3 a[href^="mailto:"], .instructor-row a.text-xsmall');
-    if (professorLinks.length > 0) {
-        professorLinks.forEach(async (link) => {
-            if (link.dataset.processed === "true") {
-                return;
-            }
-            link.dataset.processed = "true";
-            
-            let professorName = link.textContent.trim();
-            if (professorName.includes(',')) {
-                professorName = professorName.split(',').join(' ').trim();
-            }
-            try {
-                const port = chrome.runtime.connect({ name: 'professor-rating' });
-                port.postMessage({ professorName });
-                port.onMessage.addListener((teacher) => {
-                    if (teacher.error) {
-                        console.error('Error:', teacher.error);
-                        insertNoProfError(link, professorName);
-                    } else {
-                        const { avgRating, numRatings, avgDifficulty, wouldTakeAgainPercent, legacyId } = teacher;
-                        if (wouldTakeAgainPercent === -1) {
-                            console.error('Error: No ratings found for professor.');
-                            insertNoRatingsError(link, legacyId);
-                            return;
-                        }
-                        insertNumRatings(link, numRatings, legacyId);
-                        insertWouldTakeAgainPercent(link, wouldTakeAgainPercent);
-                        insertAvgDifficulty(link, avgDifficulty);
-                        insertRating(link, avgRating);
+const AUTH_TOKEN = 'dGVzdDp0ZXN0';
+const SCHOOL_ID = ['U2Nob29sLTEyNTg='];
+
+
+const searchProfessor = async (name, schoolID) => {
+	console.log('Searching for professor:', name);
+	try {
+		const response = await fetch(`https://www.ratemyprofessors.com/graphql`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Basic ${AUTH_TOKEN}`,
+			},
+			body: JSON.stringify({
+				query: `query NewSearchTeachersQuery($text: String!, $schoolID: ID!) {
+              newSearch {
+                teachers(query: {text: $text, schoolID: $schoolID}) {
+                  edges {
+                    cursor
+                    node {
+                      id
+                      firstName
+                      lastName
+                      school {
+                        name
+                        id
+                      }
                     }
-                });
-            } catch (error) {
-                console.error('Error:', error);
-                insertNoProfError(link, professorName);
-            }
-        });
-    } else {
-        console.log('No professor links found.');
-    }
+                  }
+                }
+              }
+            }`,
+				variables: {
+					text: name,
+					schoolID,
+				},
+			}),
+		});
+		const text = await response.text();
+		let json;
+		try {
+			json = JSON.parse(text);
+			// console.log('json response for ' + name + ' at ' + schoolID, json);
+		} catch (error) {
+			console.error('Error parsing JSON:', error);
+			throw new Error('Error parsing JSON: ' + text);
+		}
+		if (json.data.newSearch.teachers === null) {
+			// console.log('No results found for professor:', name);
+			return [];
+		}
+
+		return json.data.newSearch.teachers.edges.map((edge) => edge.node);
+	} catch (error) {
+		console.error('Error searching for professor:', error);
+		throw error;
+	}
+};
+
+const getProfessor = async (id) => {
+	// console.log('Fetching professor data for ID:', id);
+	try {
+		const response = await fetch(`https://www.ratemyprofessors.com/graphql`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Basic ${AUTH_TOKEN}`,
+			},
+			body: JSON.stringify({
+				query: `query TeacherRatingsPageQuery($id: ID!) {
+              node(id: $id) {
+                ... on Teacher {
+                  id
+                  firstName
+                  lastName
+                  school {
+                    name
+                    id
+                    city
+                    state
+                  }
+                  avgDifficulty
+                  avgRating
+                  department
+                  numRatings
+                  legacyId
+                  wouldTakeAgainPercent
+                }
+                id
+              }
+            }`,
+				variables: {
+					id,
+				},
+			}),
+		});
+		const json = await response.json();
+		// console.log('Professor data by ID: ' + id, json.data.node);
+		return json.data.node;
+	} catch (error) {
+		console.error('Error fetching professor data:', error);
+		throw error;
+	}
+};
+
+async function sendProfessorInfo(professorName) {
+	const normalizedName = professorName.normalize('NFKD');
+	try {
+		// for each in SCHOOL_ID, search for professor
+		// if found, get professor info, if not found, continue
+		let professorID;
+		for (let i = 0; i < SCHOOL_ID.length; i++) {
+			const professors = await searchProfessor(normalizedName, SCHOOL_ID[i]);
+			if (professors.length === 0) {
+				// console.log('No ' + professorName + ' found at RMP for schoolID:', SCHOOL_ID[i] + ', continuing to next SchoolID');
+				continue;
+			}
+			professorID = professors[0].id;
+			console.log('SUCCESS! ' + professorName + ' professorID: ' + professorID + ' found at schoolID: ' + SCHOOL_ID[i]);
+			break;
+		}
+		if (professorID === undefined) {
+			console.log('No ' + professorName + ' found for any schoolID:', SCHOOL_ID);
+			return { error: professorName + ' not found on RMP for any given SCHOOL_ID' };
+		}
+		const professor = await getProfessor(professorID);
+		console.log(professor);
+		return professor;
+	} catch (error) {
+		console.error('Error sending professor info for ' + professorName, error);
+		throw error;
+	}
 }
 
-appendRMP();
-
-const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-        if (mutation.addedNodes.length) {
-            appendRMP();
-        }
-    });
+chrome.runtime.onConnect.addListener((port) => {
+	port.onMessage.addListener((request) => {
+		sendProfessorInfo(request.professorName)
+			.then((professor) => {
+				port.postMessage(professor);
+			})
+			.catch((error) => {
+				console.error('Error:', error);
+				port.postMessage({ error });
+			});
+	});
 });
-
-observer.observe(document.body, { childList: true, subtree: true });
-
-window.addEventListener('hashchange', appendRMP, false);
-
-function insertRating(link, avgRating) {
-    link.insertAdjacentHTML('afterend', `<div class="rating"><b>Rating:</b> ${avgRating}/5</div>`);
-}
-
-function insertAvgDifficulty(link, avgDifficulty) {
-    link.insertAdjacentHTML('afterend', `<div class="rating"><b>Difficulty:</b> ${avgDifficulty}/5</div>`);
-}
-
-function insertWouldTakeAgainPercent(link, wouldTakeAgainPercent) {
-    link.insertAdjacentHTML('afterend', `<div class="rating"><b>${Math.round(wouldTakeAgainPercent)}%</b> of students would take this professor again.</div>`);
-}
-
-function insertNumRatings(link, numRatings, legacyId) {
-    const profLink = `<a target="_blank" rel="noopener noreferrer" href='https://www.ratemyprofessors.com/professor?tid=${legacyId}'>${numRatings} ratings</a>`;
-    link.insertAdjacentHTML('afterend', `<div class="rating">${profLink}</div>`);
-}
-
-function insertNoRatingsError(link, legacyId) {
-    link.insertAdjacentHTML(
-        'afterend',
-        `<div class="rating"><b>Error:</b> this professor has <a target="_blank" rel="noopener noreferrer" href='https://www.ratemyprofessors.com/search/teachers?query=${legacyId}'>no ratings on RateMyProfessors.</a></div>`
-    );
-}
-
-function insertNoProfError(link, professorName) {
-    link.insertAdjacentHTML(
-        'afterend',
-        `<div class="rating"><b>Professor not found: </b><a target="_blank" rel="noopener noreferrer" href='https://www.ratemyprofessors.com/search/teachers?query=${encodeURIComponent(
-            professorName
-        )}'>Click to Search RMP</a></div>`
-    );
-}
