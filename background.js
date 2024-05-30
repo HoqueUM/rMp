@@ -1,4 +1,4 @@
-console.log('content script running');
+console.log('Content script running');
 
 const style = document.createElement('link');
 style.rel = 'stylesheet';
@@ -7,48 +7,60 @@ style.href = chrome.runtime.getURL('style.css');
 document.head.appendChild(style);
 
 function appendRMP() {
-    let professorLinks;
-    const profInterval = setInterval(() => {
-        professorLinks = document.querySelectorAll('.col-sm-3 a[href^="mailto:"], .instructor-row a.text-xsmall');
-        if (professorLinks.length > 0) {
-            clearInterval(profInterval);
-            professorLinks.forEach(async (link) => {
-                let professorName = link.textContent.trim();
-                if (professorName.includes(',')) {
-                    professorName = professorName.split(',').join(' ').trim();
-                }
-                try {
-                    const port = chrome.runtime.connect({ name: 'professor-rating' });
-                    port.postMessage({ professorName });
-                    port.onMessage.addListener((teacher) => {
-                        if (teacher.error) {
-                            console.error('Error:', teacher.error);
-                            insertNoProfError(link, professorName);
-                        } else {
-                            const { avgRating, numRatings, avgDifficulty, wouldTakeAgainPercent, legacyId } = teacher;
-                            if (wouldTakeAgainPercent === -1) {
-                                console.error('Error: No ratings found for professor.');
-                                insertNoRatingsError(link, legacyId);
-                                return;
-                            }
-                            insertNumRatings(link, numRatings, legacyId);
-                            insertWouldTakeAgainPercent(link, wouldTakeAgainPercent);
-                            insertAvgDifficulty(link, avgDifficulty);
-                            insertRating(link, avgRating);
+    const professorLinks = document.querySelectorAll('.col-sm-3 a[href^="mailto:"], .instructor-row a.text-xsmall');
+    if (professorLinks.length > 0) {
+        professorLinks.forEach(async (link) => {
+            if (link.dataset.processed === "true") {
+                return;
+            }
+            link.dataset.processed = "true";
+            
+            let professorName = link.textContent.trim();
+            if (professorName.includes(',')) {
+                professorName = professorName.split(',').join(' ').trim();
+            }
+            try {
+                const port = chrome.runtime.connect({ name: 'professor-rating' });
+                port.postMessage({ professorName });
+                port.onMessage.addListener((teacher) => {
+                    if (teacher.error) {
+                        console.error('Error:', teacher.error);
+                        insertNoProfError(link, professorName);
+                    } else {
+                        const { avgRating, numRatings, avgDifficulty, wouldTakeAgainPercent, legacyId } = teacher;
+                        if (wouldTakeAgainPercent === -1) {
+                            console.error('Error: No ratings found for professor.');
+                            insertNoRatingsError(link, legacyId);
+                            return;
                         }
-                    });
-                } catch (error) {
-                    console.error('Error:', error);
-                    insertNoProfError(link, professorName);
-                }
-            });
-        } else {
-            console.log('Retrying every 1500ms until prof names are found...');
-        }
-    }, 1500);
+                        insertNumRatings(link, numRatings, legacyId);
+                        insertWouldTakeAgainPercent(link, wouldTakeAgainPercent);
+                        insertAvgDifficulty(link, avgDifficulty);
+                        insertRating(link, avgRating);
+                    }
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                insertNoProfError(link, professorName);
+            }
+        });
+    } else {
+        console.log('No professor links found.');
+    }
 }
 
 appendRMP();
+
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.addedNodes.length) {
+            appendRMP();
+        }
+    });
+});
+
+observer.observe(document.body, { childList: true, subtree: true });
+
 window.addEventListener('hashchange', appendRMP, false);
 
 function insertRating(link, avgRating) {
