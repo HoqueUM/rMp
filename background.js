@@ -60,7 +60,7 @@ function insertAvgDifficulty(link, avgDifficulty) {
 }
 
 function insertWouldTakeAgainPercent(link, wouldTakeAgainPercent) {
-    link.insertAdjacentHTML('afterend', `<div class="rating"><b>${wouldTakeAgainPercent}%</b> of students would take this professor again.</div>`);
+    link.insertAdjacentHTML('afterend', `<div class="rating"><b>${Math.round(wouldTakeAgainPercent)}%</b> of students would take this professor again.</div>`);
 }
 
 function insertNumRatings(link, numRatings, legacyId) {
