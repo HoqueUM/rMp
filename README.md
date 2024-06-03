@@ -1,5 +1,5 @@
 # rMp
-A Rate My Professor extension for the University of Michigan. Integrated with Atlas and the Course Guide.
+A Rate My Professor extension for the University of Michigan. Integrated into Atlas and the Course Guide.
 
 ## How to use
 Coming soon...
