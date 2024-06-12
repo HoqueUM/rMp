@@ -27,7 +27,8 @@ That's why this RateMyProfessors extension is the perfect tool to solve this!
 <br></br>
 **Note**: NEVER download code from anywhere you don't trust. But you can trust me I promise 😉. Feel free to look through the source code if you have any doubts.
 <br></br>
-![image](https://github.com/HoqueUM/rMp/assets/125516043/c3e7167d-c78c-4a59-9dca-b15bca60f96d)
+![image](https://github.com/HoqueUM/rMp/assets/125516043/75132eae-f945-473b-a34d-4ebc402cd6bb)
+
 3. Unzip the file wherever it was installed.
 4. Got to chrome://extensions/
 5. Click `Developer mode` at the top right.
