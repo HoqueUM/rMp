@@ -29,7 +29,8 @@ That's why this RateMyProfessors extension is the perfect tool to solve this!
 <br></br>
 **Note**: NEVER download code from anywhere you don't trust. But you can trust me I promise 😉. Feel free to look through the source code if you have any doubts.
 <br></br>
-![image](https://github.com/HoqueUM/rMp/assets/125516043/43aa63bd-b28a-4d54-b34d-17bbf0241cb8)
+![image](https://github.com/HoqueUM/rMp/assets/125516043/c477f525-1d62-4ec5-8654-b656190895b6)
+
 
 
 
