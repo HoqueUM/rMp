@@ -27,7 +27,8 @@ That's why this RateMyProfessors extension is the perfect tool to solve this!
 <br></br>
 **Note**: NEVER download code from anywhere you don't trust. But you can trust me I promise 😉. Feel free to look through the source code if you have any doubts.
 <br></br>
-![image](https://github.com/HoqueUM/rMp/assets/125516043/e2fb57f1-41ec-4016-9953-91ce4bac99d0)
+![image](https://github.com/HoqueUM/rMp/assets/125516043/43aa63bd-b28a-4d54-b34d-17bbf0241cb8)
+
 
 
 3. Unzip the file wherever it was installed.
@@ -36,7 +37,7 @@ That's why this RateMyProfessors extension is the perfect tool to solve this!
 6. Click `Load unpacked` at the top left.
 7. Upload the `package` folder from your computer.
 
-That's it! RateMyProfessors should now be integrated into your Atlas and Course Guide
+That's it! RateMyProfessors should now work on your Atlas and Course Guide
 
 
 # Credit
