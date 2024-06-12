@@ -2,7 +2,7 @@
 A Rate My Professor extension for the University of Michigan. Integrated into Atlas and the Course Guide.
 
 # About
-When it comes to scheduling classes, it's important to find the right professor in order to succeed. RateMyProfessors provides a valuable tool to gauge if a professor is good or not, but it's annoying switching between tabs al the time when scheduling.
+When it comes to scheduling classes, it's important to find the right professor in order to succeed. RateMyProfessors provides a valuable tool to gauge if a professor is good or not, but it's annoying switching between tabs all the time when scheduling.
 That's why this RateMyProfessors extension is the perfect tool to solve this!
 
 **Diclaimer**: At the moment this only works on Chrome...sorry 
@@ -27,7 +27,8 @@ That's why this RateMyProfessors extension is the perfect tool to solve this!
 <br></br>
 **Note**: NEVER download code from anywhere you don't trust. But you can trust me I promise 😉. Feel free to look through the source code if you have any doubts.
 <br></br>
-![image](https://github.com/HoqueUM/rMp/assets/125516043/75132eae-f945-473b-a34d-4ebc402cd6bb)
+![image](https://github.com/HoqueUM/rMp/assets/125516043/e2fb57f1-41ec-4016-9953-91ce4bac99d0)
+
 
 3. Unzip the file wherever it was installed.
 4. Got to chrome://extensions/
