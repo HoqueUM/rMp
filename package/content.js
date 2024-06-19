@@ -7,7 +7,7 @@ style.href = chrome.runtime.getURL('style.css');
 document.head.appendChild(style);
 
 function appendRMP() {
-    const professorLinks = document.querySelectorAll('.col-sm-3 a[href^="mailto:"], .instructor-row a.text-xsmall');
+    const professorLinks = document.querySelectorAll('.col-sm-3 a[href^="mailto:"], .instructor-row a.text-xsmall, td.instructor-name');
     if (professorLinks.length > 0) {
         professorLinks.forEach(async (link) => {
             if (link.dataset.processed === "true") {
